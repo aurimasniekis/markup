@@ -1,0 +1,10 @@
+#!/usr/bin/env ruby
+# Usage: markup [-s css_file|none|github|github2] [-o <file.html>...] [<file>...]
+# Convert one or more Markdown files to HTML and write to file.
+# Default style is none you can specify your own css stylesheet or use one of include (github|github2)
+if ARGV.include?('--help')
+  File.read(__FILE__).split("\n").grep(/^# /).each do |line|
+    puts line[2..-1]
+  end
+  exit 0
+end
