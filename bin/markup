@@ -8,3 +8,69 @@ if ARGV.include?('--help')
   end
   exit 0
 end
+
+root = File.expand_path('../../', __FILE__)
+$:.unshift File.expand_path('lib', root)
+
+require 'redcarpet'
+
+css_style = nil
+renderer = Redcarpet::Render::XHTML
+output_file = nil
+
+ARGV.delete_if do |arg|
+  if arg =~ /^-s=(.*)$/
+    css_style = $1
+    true
+  elsif arg =~ /^-h$/
+    renderer = Redcarpet::Render::HTML
+    true
+  else
+    false
+  end
+end
+
+if css_style.nil?
+  css_file = File.expand_path('styles/none.html',root)
+elsif File.exist? css_style
+  css_file = css_style
+else
+  css_file = File.expand_path("styles/#{css_style}.html",root)
+  unless File.exist? css_file
+    css_file = File.expand_path('styles/none.html',root)
+  end
+end
+
+input = ARGV.shift
+output = ARGV.pop if ARGV.size > 0
+
+unless File.exist? input
+  puts 'No input file specified'
+  exit
+end
+
+if output.nil?
+  dirname  = File.dirname(input)
+  basename = File.basename(input, ".*")
+  extname  = File.extname(input)
+  if extname == ''
+    if basename[0,1]=='.'
+      output = dirname + '/.html'
+    else
+      output = input + '.html'
+    end
+  else
+    output = dirname + '/' + basename + '.html'
+  end
+end
+
+render = renderer.new
+
+output_html =  Redcarpet::Markdown.new(render).render(File.read(input))
+
+template = File.read(css_file)
+template = template.gsub('%title%',File.basename(input))
+template = template.gsub('%content%',output_html)
+
+File.write(output, template)
+
